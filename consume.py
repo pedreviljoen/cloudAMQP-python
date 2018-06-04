@@ -1,19 +1,25 @@
 # consume.py
-import pika, os
+import pika
+import time
+from envirophat import light, weather, leds
 
 # Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
-url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@localhost:5672/%2f')
-params = pika.URLParameters(url)
+params = pika.URLParameters('amqp://bgwwribe:_nNVuHac4WlIMUqRlUr3nEN12K3paelX@wombat.rmq.cloudamqp.com/bgwwribe')
+params.socket_timeout = 5
 connection = pika.BlockingConnection(params)
 channel = connection.channel() # start a channel
 
-channel.queue_declare(queue='hello')
+channel.queue_declare(queue='light_command', durable=True)
 
 def callback(ch, method, properties, body):
   print(" [x] Received %r" % body)
+  if(body == 'off'):
+    leds.off()
+  else:
+    leds.on()
 
 channel.basic_consume(callback,
-                      queue='hello',
+                      queue='light_command',
                       no_ack=True)
 
 print(' [*] Waiting for messages:')
